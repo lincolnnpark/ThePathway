@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- iOS PWA Settings -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Letting Go">
+    
+    <!-- Custom Home Screen Icon -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1024' height='1024' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' style='background-color: %230f172a;'%3E%3Cpath d='M10 2v2.5'/%3E%3Cpath d='M14 2v2.5'/%3E%3Cpath d='M12 2v4'/%3E%3Cpath d='M8.5 2.5a12 12 0 0 1 7 7c0 2.76-1.12 5.26-2.93 7.07l-4.14-4.14'/%3E%3Cpath d='M12.5 12.5l-4.14 4.14A7 7 0 0 1 5 12c0-4.97 4.03-9 9-9v0z'/%3E%3C/svg%3E">
+
+    <title>The Pathway | Letting Go</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 850: '#151e2e', 900: '#0f172a', 950: '#020617' },
+                        gold: { 500: '#d4af37', 600: '#b5922f', 900: '#423206' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        serif: ['Merriweather', 'Georgia', 'serif'],
+                    },
+                    animation: {
+                        'breathe': 'breathe 8s infinite ease-in-out',
+                        'fade-in': 'fadeIn 0.8s ease-out forwards',
+                        'fade-out': 'fadeOut 0.8s ease-in forwards',
+                        'slide-up': 'slideUp 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        breathe: {
+                            '0%, 100%': { transform: 'scale(1)', opacity: '0.5' },
+                            '50%': { transform: 'scale(1.3)', opacity: '0.8' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        fadeOut: {
+                            '0%': { opacity: '1' },
+                            '100%': { opacity: '0', visibility: 'hidden' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    },
+                    padding: { 'safe': 'env(safe-area-inset-bottom)' }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Merriweather:ital,wght@0,300;0,400;1,300&display=swap');
+        
+        body {
+            background-color: #020617;
+            color: #e2e8f0;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-primary { transition: all 0.2s ease; }
+        .btn-primary:active { transform: scale(0.96); }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+        .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
+        
+        /* Accordion Styles */
+        .faq-answer { display: none; }
+        .faq-answer.active { display: block; animation: slideUp 0.3s ease-out forwards; }
+        .faq-icon { transition: transform 0.3s ease; }
+        .faq-icon.active { transform: rotate(180deg); }
+        
+        /* Quote Positioning */
+        .quote-wrapper {
+            position: relative;
+            display: inline-block;
+            padding: 2rem 3rem; 
+        }
+        .quote-mark {
+            position: absolute;
+            width: 2.5rem;
+            height: 2.5rem;
+            color: rgba(212, 175, 55, 0.4);
+        }
+        .quote-mark.start { top: 0; left: 0; }
+        .quote-mark.end { bottom: 0; right: 0; transform: rotate(180deg); }
+
+        /* Swipe Action */
+        .swipe-item {
+            transition: transform 0.2s ease-out;
+            position: relative;
+            z-index: 10;
+            background: rgba(15, 23, 42, 0.9); /* Ensure opacity for covering delete btn */
+        }
+        .delete-action {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden selection:bg-gold-500 selection:text-white pt-safe relative">
+
+    <!-- INTRO SPLASH SCREEN -->
+    <div id="intro-screen" onclick="dismissIntro()" class="fixed inset-0 z-[100] bg-slate-950 flex flex-col items-center justify-center p-8 text-center cursor-pointer transition-opacity duration-1000">
+        <div class="animate-fade-in max-w-lg mx-auto flex flex-col h-full justify-center relative w-full">
+            <div class="mb-8 text-gold-500/30 mx-auto">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <h1 class="text-5xl md:text-6xl font-serif italic text-gold-500 mb-16 tracking-wider drop-shadow-[0_0_25px_rgba(212,175,55,0.2)]">
+                The Pathway
+            </h1>
+            <div class="flex justify-center">
+                <div class="quote-wrapper max-w-md">
+                    <svg class="quote-mark start" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21L14.017 18C14.017 16.896 14.321 15.923 14.929 15.081C15.537 14.239 16.357 13.459 17.389 12.741L16.731 10.561C15.039 11.623 14.069 12.878 13.821 14.326C13.821 14.326 13.821 14.326 13.821 14.326C13.545 13.714 13.407 13.052 13.407 12.34C13.407 10.284 14.147 8.528 15.627 7.072C17.107 5.616 18.867 4.888 20.907 4.888C21.787 4.888 22.467 5.568 22.947 6.928C23.427 8.288 23.667 9.528 23.667 10.648C23.667 14.304 22.397 17.754 19.857 21L14.017 21ZM6.007 21L6.007 18C6.007 16.896 6.311 15.923 6.919 15.081C7.527 14.239 8.347 13.459 9.379 12.741L8.721 10.561C7.029 11.623 6.059 12.878 5.811 14.326C5.811 14.326 5.811 14.326 5.811 14.326C5.535 13.714 5.397 13.052 5.397 12.34C5.397 10.284 6.137 8.528 7.617 7.072C9.097 5.616 10.857 4.888 12.897 4.888C13.777 4.888 14.457 5.568 14.937 6.928C15.417 8.288 15.657 9.528 15.657 10.648C15.657 14.304 14.387 17.754 11.847 21L6.007 21Z" /></svg>
+                    <p id="intro-quote" class="text-xl md:text-2xl font-light text-slate-200 leading-relaxed font-serif italic text-center">
+                        <!-- Content injected via JS -->
+                    </p>
+                    <svg class="quote-mark end" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21L14.017 18C14.017 16.896 14.321 15.923 14.929 15.081C15.537 14.239 16.357 13.459 17.389 12.741L16.731 10.561C15.039 11.623 14.069 12.878 13.821 14.326C13.821 14.326 13.821 14.326 13.821 14.326C13.545 13.714 13.407 13.052 13.407 12.34C13.407 10.284 14.147 8.528 15.627 7.072C17.107 5.616 18.867 4.888 20.907 4.888C21.787 4.888 22.467 5.568 22.947 6.928C23.427 8.288 23.667 9.528 23.667 10.648C23.667 14.304 22.397 17.754 19.857 21L14.017 21ZM6.007 21L6.007 18C6.007 16.896 6.311 15.923 6.919 15.081C7.527 14.239 8.347 13.459 9.379 12.741L8.721 10.561C7.029 11.623 6.059 12.878 5.811 14.326C5.811 14.326 5.811 14.326 5.811 14.326C5.535 13.714 5.397 13.052 5.397 12.34C5.397 10.284 6.137 8.528 7.617 7.072C9.097 5.616 10.857 4.888 12.897 4.888C13.777 4.888 14.457 5.568 14.937 6.928C15.417 8.288 15.657 9.528 15.657 10.648C15.657 14.304 14.387 17.754 11.847 21L6.007 21Z" /></svg>
+                </div>
+            </div>
+            <p class="text-xs text-gold-500 uppercase tracking-[0.25em] font-sans text-center opacity-80 mt-8">— David R. Hawkins</p>
+            <div class="mt-16 animate-pulse opacity-50">
+                <span class="text-[10px] text-slate-400 uppercase tracking-[0.4em]">Tap to Begin</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="flex-none px-6 py-4 border-b border-slate-800/50 bg-slate-950/90 backdrop-blur z-20 flex justify-between items-center">
+        <div>
+            <h1 class="text-xl font-serif italic text-gold-500 tracking-wide">The Pathway</h1>
+            <p class="text-[10px] text-slate-500 uppercase tracking-[0.2em] mt-0.5">Mechanism of Surrender</p>
+        </div>
+        <button onclick="toggleSettings()" class="text-slate-400 hover:text-white transition p-2">
+            <i data-lucide="info" class="w-5 h-5"></i>
+        </button>
+    </header>
+
+    <!-- Main Content -->
+    <main id="app-content" class="flex-1 overflow-y-auto relative p-4 pb-24 max-w-md mx-auto w-full no-scrollbar">
+        
+        <!-- View: Guide -->
+        <section id="view-guide" class="view-section animate-fade-in space-y-6 pb-20">
+            <div class="glass-panel p-6 rounded-2xl shadow-lg">
+                <h2 class="text-2xl font-light mb-4 text-white">The Mechanism</h2>
+                <p class="text-slate-300 leading-relaxed mb-4">
+                    Letting go involves being aware of a feeling, letting it come up, staying with it, and letting it run its course without wanting to make it different or do anything about it.
+                </p>
+                <div class="bg-slate-800/50 p-4 rounded-lg border-l-2 border-gold-500 my-6">
+                    <p class="italic text-slate-400 text-sm">"It means to simply let the feeling be there and to focus on letting out the energy behind it."</p>
+                    <p class="text-right text-xs text-slate-500 mt-2">— David R. Hawkins</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="flex gap-4 items-start">
+                        <div class="bg-slate-800 p-2 rounded-full text-gold-500 shrink-0"><i data-lucide="eye" class="w-5 h-5"></i></div>
+                        <div>
+                            <h3 class="font-medium text-white">1. Acknowledge</h3>
+                            <p class="text-sm text-slate-400 mt-1">Notice the feeling. Allow it to surface. Do not push it down.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-start">
+                        <div class="bg-slate-800 p-2 rounded-full text-gold-500 shrink-0"><i data-lucide="brain-circuit" class="w-5 h-5"></i></div>
+                        <div>
+                            <h3 class="font-medium text-white">2. Ignore Thoughts</h3>
+                            <p class="text-sm text-slate-400 mt-1">Thoughts are rationalizations created by the mind. Ignore the "why." Focus only on the "what" (the sensation).</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-start">
+                        <div class="bg-slate-800 p-2 rounded-full text-gold-500 shrink-0"><i data-lucide="waves" class="w-5 h-5"></i></div>
+                        <div>
+                            <h3 class="font-medium text-white">3. No Resistance</h3>
+                            <p class="text-sm text-slate-400 mt-1">Drop the resistance to the feeling. It is the resistance that keeps it going. Ask: "Can I welcome this feeling?"</p>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="switchTab('process')" class="w-full mt-8 py-4 bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 text-white rounded-xl transition shadow-lg flex items-center justify-center gap-2 font-medium">
+                    Start Practice <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- View: Process -->
+        <section id="view-process" class="view-section hidden animate-fade-in h-full flex flex-col">
+            <div class="glass-panel p-6 rounded-2xl shadow-lg flex-1 flex flex-col justify-center items-center text-center relative overflow-hidden min-h-[400px]">
+                <div id="process-step-0" class="process-step w-full">
+                    <h2 class="text-3xl font-light mb-2 text-white">Current Feeling?</h2>
+                    <p class="text-slate-400 mb-8 text-sm">Name the emotion to release.</p>
+                    <input type="text" id="emotion-input" placeholder="e.g., Anxiety, Anger, Grief" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-6 py-4 text-lg text-white focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500 transition mb-6 text-center placeholder-slate-600">
+                    <button onclick="startProcess()" class="w-full py-4 bg-gold-600 hover:bg-gold-500 text-white font-medium rounded-xl transition shadow-lg shadow-gold-900/20 btn-primary text-lg">Begin Surrender</button>
+                </div>
+                <!-- Steps 1-5 -->
+                <div id="process-step-1" class="process-step hidden w-full">
+                    <div class="mb-8 text-gold-500 bg-gold-500/10 p-4 rounded-full inline-block"><i data-lucide="map-pin" class="w-10 h-10"></i></div>
+                    <h2 class="text-2xl font-light mb-4 text-white">Locate it</h2>
+                    <p class="text-slate-300 leading-relaxed mb-8 font-light">Close your eyes. Where do you feel "<span class="current-emotion font-semibold text-white"></span>"?<br><br>Chest? Solar plexus? Throat?<br><span class="text-slate-400 text-sm block mt-4">Stop naming it. Just feel the raw energy.</span></p>
+                    <button onclick="nextStep(2)" class="w-full py-4 border border-slate-600 hover:bg-slate-800 rounded-xl text-white transition btn-primary">I have located it</button>
+                </div>
+                <div id="process-step-2" class="process-step hidden w-full">
+                    <div class="mb-8 text-slate-400 bg-slate-800 p-4 rounded-full inline-block"><i data-lucide="x-circle" class="w-10 h-10"></i></div>
+                    <h2 class="text-2xl font-light mb-4 text-white">Drop the Story</h2>
+                    <p class="text-slate-300 leading-relaxed mb-8 font-light">Your mind is creating a narrative.<br><strong>Ignore the thoughts.</strong><br><br><span class="text-slate-400 text-sm">Return 100% focus to the physical sensation.</span></p>
+                    <button onclick="nextStep(3)" class="w-full py-4 border border-slate-600 hover:bg-slate-800 rounded-xl text-white transition btn-primary">Thoughts ignored</button>
+                </div>
+                <div id="process-step-3" class="process-step hidden w-full">
+                    <div class="mb-8 text-emerald-500 bg-emerald-500/10 p-4 rounded-full inline-block"><i data-lucide="unlock" class="w-10 h-10"></i></div>
+                    <h2 class="text-2xl font-light mb-4 text-white">Drop Resistance</h2>
+                    <p class="text-slate-300 leading-relaxed mb-8 font-light">Notice the resistance.<br><strong>Open the doors.</strong><br><br>Allow the feeling to be there. Don't push it away.</p>
+                    <button onclick="nextStep(4)" class="w-full py-4 bg-slate-800 hover:bg-slate-700 rounded-xl text-white transition btn-primary">I am allowing it</button>
+                </div>
+                <div id="process-step-4" class="process-step hidden w-full">
+                    <div class="absolute inset-0 flex items-center justify-center -z-10 opacity-20 pointer-events-none"><div class="w-64 h-64 bg-gold-500 rounded-full blur-3xl animate-breathe"></div></div>
+                    <h2 class="text-xl font-light mb-2 text-white">Stay with it</h2>
+                    <div class="text-6xl font-extralight text-white mb-10 font-serif tabular-nums tracking-tight" id="process-timer">00:00</div>
+                    <button onclick="finishProcess()" class="w-full py-4 bg-emerald-900/40 hover:bg-emerald-900/60 text-emerald-100 border border-emerald-800/50 rounded-xl transition backdrop-blur-sm btn-primary">Feeling has Shifted</button>
+                </div>
+                <div id="process-step-5" class="process-step hidden w-full">
+                    <div class="mb-6 text-gold-500 animate-fade-in"><i data-lucide="check-circle-2" class="w-20 h-20 mx-auto"></i></div>
+                    <h2 class="text-3xl font-light mb-4 text-white">Released</h2>
+                    <p class="text-slate-300 mb-8 font-light">You have surrendered a layer of "<span class="current-emotion font-normal text-white"></span>".</p>
+                    <button onclick="saveAndClose()" class="w-full py-4 bg-slate-100 hover:bg-white text-slate-900 font-medium rounded-xl transition btn-primary shadow-lg shadow-white/5">Save to Journal</button>
+                </div>
+                <button onclick="resetProcess()" class="absolute top-0 right-0 p-4 text-slate-600 hover:text-slate-400 hidden" id="process-reset-btn"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+        </section>
+
+        <!-- View: Timer -->
+        <section id="view-timer" class="view-section hidden animate-fade-in h-full flex flex-col justify-center">
+            <div class="text-center w-full">
+                
+                <!-- Intention Input -->
+                <div class="mb-8 max-w-[200px] mx-auto">
+                    <input type="text" id="timer-intention" placeholder="Set Intention (Optional)..." class="w-full bg-transparent border-b border-slate-700 text-center text-slate-300 text-sm pb-2 focus:outline-none focus:border-gold-500 transition placeholder-slate-700">
+                </div>
+
+                <div class="relative w-64 h-64 mx-auto mb-10 flex items-center justify-center">
+                    <div id="breath-circle" class="absolute inset-0 bg-slate-800 rounded-full opacity-50 scale-100 transition-transform duration-1000"></div>
+                    <div id="breath-circle-inner" class="absolute w-40 h-40 bg-slate-700/50 rounded-full blur-2xl"></div>
+                    <div id="timer-display" class="relative z-10 text-6xl font-extralight text-white font-serif tabular-nums tracking-tight">10:00</div>
+                </div>
+
+                <div class="flex justify-center gap-8 mb-8">
+                    <button onclick="adjustTimer(-60)" class="text-slate-600 hover:text-slate-300 transition p-4 bg-slate-900 rounded-full"><i data-lucide="minus" class="w-6 h-6"></i></button>
+                    <button onclick="adjustTimer(60)" class="text-slate-600 hover:text-slate-300 transition p-4 bg-slate-900 rounded-full"><i data-lucide="plus" class="w-6 h-6"></i></button>
+                </div>
+
+                <div class="flex justify-center gap-6 items-center mb-10">
+                    <button onclick="resetTimer()" class="w-14 h-14 rounded-full bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center transition hover:bg-slate-800"><i data-lucide="rotate-ccw" class="w-5 h-5"></i></button>
+                    <button id="timer-toggle" onclick="toggleTimer()" class="w-20 h-20 rounded-full bg-gold-600 hover:bg-gold-500 text-white flex items-center justify-center shadow-xl shadow-gold-900/30 transition btn-primary"><i data-lucide="play" class="w-8 h-8 fill-current ml-1"></i></button>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex justify-center gap-4">
+                    <div class="relative">
+                        <button onclick="toggleModal('bell-modal')" class="flex items-center gap-2 px-4 py-2 bg-slate-900/80 border border-slate-800 rounded-full text-xs text-slate-400 hover:text-gold-500 transition">
+                            <i data-lucide="bell" class="w-4 h-4"></i> <span>Interval</span>
+                        </button>
+                        <div id="bell-status" class="absolute top-0 right-0 w-2 h-2 bg-gold-500 rounded-full hidden"></div>
+                    </div>
+                    <div class="relative">
+                        <button onclick="toggleModal('ambience-modal')" class="flex items-center gap-2 px-4 py-2 bg-slate-900/80 border border-slate-800 rounded-full text-xs text-slate-400 hover:text-emerald-500 transition">
+                            <i data-lucide="waves" class="w-4 h-4"></i> <span>Sound</span>
+                        </button>
+                        <div id="ambience-status" class="absolute top-0 right-0 w-2 h-2 bg-emerald-500 rounded-full hidden"></div>
+                    </div>
+                </div>
+                
+                <p class="mt-8 text-slate-600 text-xs max-w-[200px] mx-auto leading-relaxed">Let the energy behind the thoughts run out.</p>
+            </div>
+        </section>
+
+        <!-- View: Q&A -->
+        <section id="view-qa" class="view-section hidden animate-fade-in pb-20">
+            <h2 class="text-2xl font-light text-white mb-6 px-2">Q & A</h2>
+            <div id="qa-container" class="space-y-3">
+                <div class="text-center text-slate-500 mt-10 text-sm">Loading Q&A...</div>
+            </div>
+            <div class="h-12"></div>
+        </section>
+
+        <!-- View: Journal (Updated with Swipe) -->
+        <section id="view-journal" class="view-section hidden animate-fade-in space-y-6 pb-20">
+            <div class="flex justify-between items-end px-2">
+                <h2 class="text-2xl font-light text-white">History</h2>
+                <button onclick="clearJournal()" class="text-xs text-red-400/60 hover:text-red-400 uppercase tracking-wider p-2">Clear All</button>
+            </div>
+            <div id="journal-list" class="space-y-3 pb-8 overflow-x-hidden"></div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="flex-none bg-slate-950/90 backdrop-blur-md border-t border-slate-800 pb-safe z-30">
+        <div class="flex justify-around items-center max-w-md mx-auto px-1">
+            <button onclick="switchTab('guide')" class="nav-btn active p-2 py-3 flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300 w-full transition active:scale-95"><i data-lucide="book" class="w-5 h-5"></i><span class="text-[9px] uppercase tracking-widest font-medium">Guide</span></button>
+            <button onclick="switchTab('process')" class="nav-btn p-2 py-3 flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300 w-full transition active:scale-95"><i data-lucide="layers" class="w-5 h-5"></i><span class="text-[9px] uppercase tracking-widest font-medium">Work</span></button>
+            <button onclick="switchTab('timer')" class="nav-btn p-2 py-3 flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300 w-full transition active:scale-95"><i data-lucide="clock" class="w-5 h-5"></i><span class="text-[9px] uppercase tracking-widest font-medium">Timer</span></button>
+            <button onclick="switchTab('qa')" class="nav-btn p-2 py-3 flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300 w-full transition active:scale-95"><i data-lucide="help-circle" class="w-5 h-5"></i><span class="text-[9px] uppercase tracking-widest font-medium">Q&A</span></button>
+            <button onclick="switchTab('journal')" class="nav-btn p-2 py-3 flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300 w-full transition active:scale-95"><i data-lucide="archive" class="w-5 h-5"></i><span class="text-[9px] uppercase tracking-widest font-medium">Log</span></button>
+        </div>
+    </nav>
+
+    <!-- MODALS -->
+    
+    <div id="info-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] hidden items-center justify-center p-6 animate-fade-in">
+        <div class="bg-slate-900 border border-slate-700 p-8 rounded-3xl max-w-xs w-full shadow-2xl text-center">
+            <h3 class="text-xl text-white mb-2 font-serif italic">The Pathway</h3>
+            <p class="text-slate-500 text-xs mb-6 uppercase tracking-widest">Version 3.3 (Generative Audio)</p>
+            <div class="space-y-4 text-sm text-slate-400 mb-8 text-left"><p>Based on "Letting Go" by Dr. David R. Hawkins.</p><p>This app functions offline.</p></div>
+            <button onclick="toggleSettings()" class="w-full py-3 bg-slate-800 text-white rounded-xl hover:bg-slate-700 transition font-medium">Close</button>
+        </div>
+    </div>
+
+    <!-- Interval Bell Modal -->
+    <div id="bell-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] hidden items-end sm:items-center justify-center p-4 animate-fade-in">
+        <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl max-w-xs w-full shadow-2xl mb-safe sm:mb-0">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg text-white font-medium">Interval Bell</h3>
+                <button onclick="toggleModal('bell-modal')" class="text-slate-500"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="space-y-2">
+                <button onclick="setBellInterval(0)" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 flex justify-between">None <span id="bell-check-0" class="text-gold-500 hidden"><i data-lucide="check" class="w-4 h-4"></i></span></button>
+                <button onclick="setBellInterval(1)" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 flex justify-between">Every 1 Minute <span id="bell-check-1" class="text-gold-500 hidden"><i data-lucide="check" class="w-4 h-4"></i></span></button>
+                <button onclick="setBellInterval(5)" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 flex justify-between">Every 5 Minutes <span id="bell-check-5" class="text-gold-500 hidden"><i data-lucide="check" class="w-4 h-4"></i></span></button>
+                <button onclick="setBellInterval('half')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 flex justify-between">Halfway Point <span id="bell-check-half" class="text-gold-500 hidden"><i data-lucide="check" class="w-4 h-4"></i></span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ambience Modal -->
+    <div id="ambience-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] hidden items-end sm:items-center justify-center p-4 animate-fade-in">
+        <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl max-w-xs w-full shadow-2xl mb-safe sm:mb-0">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg text-white font-medium">Ambient Sound</h3>
+                <button onclick="toggleModal('ambience-modal')" class="text-slate-500"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="space-y-2 max-h-64 overflow-y-auto">
+                <button onclick="setAmbience('none')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 flex justify-between">None <span id="amb-check-none" class="text-gold-500 hidden"><i data-lucide="check" class="w-4 h-4"></i></span></button>
+                <button onclick="setAmbience('rain')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 flex justify-between">Rain (Synth) <span id="amb-check-rain" class="text-gold-500 hidden"><i data-lucide="check" class="w-4 h-4"></i></span></button>
+                <button onclick="setAmbience('wind')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 flex justify-between">Wind (Synth) <span id="amb-check-wind" class="text-gold-500 hidden"><i data-lucide="check" class="w-4 h-4"></i></span></button>
+                <button onclick="setAmbience('river')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 flex justify-between">River (Synth) <span id="amb-check-river" class="text-gold-500 hidden"><i data-lucide="check" class="w-4 h-4"></i></span></button>
+                <button onclick="setAmbience('birds')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 flex justify-between">Birds (Synth) <span id="amb-check-birds" class="text-gold-500 hidden"><i data-lucide="check" class="w-4 h-4"></i></span></button>
+                <button onclick="setAmbience('chimes')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 flex justify-between">Chimes (Synth) <span id="amb-check-chimes" class="text-gold-500 hidden"><i data-lucide="check" class="w-4 h-4"></i></span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session Complete Modal -->
+    <div id="complete-modal" class="fixed inset-0 bg-black/95 z-[70] hidden items-center justify-center p-6 animate-fade-in">
+        <div class="bg-slate-900 border border-slate-700 p-8 rounded-3xl max-w-sm w-full shadow-2xl text-center">
+            <div class="mb-6 text-gold-500 mx-auto bg-gold-500/10 p-4 rounded-full inline-block">
+                <i data-lucide="check" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-2xl text-white mb-2 font-light">Session Complete</h3>
+            <p class="text-slate-400 text-sm mb-8">You have completed your sitting. Would you like to add this to your log?</p>
+            <div class="space-y-3">
+                <button onclick="saveTimerSession()" class="w-full py-3.5 bg-gold-600 hover:bg-gold-500 text-white rounded-xl transition font-medium">Add to Log</button>
+                <button onclick="closeCompleteModal()" class="w-full py-3.5 border border-slate-700 text-slate-400 hover:text-white rounded-xl transition">Discard</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const INTRO_QUOTES = [
+            "To be surrendered means to have no strong emotion about a thing: 'It's okay if it happens, and it's okay if it doesn't.'",
+            "We change the world not by what we say or do, but as a consequence of what we have become.",
+            "The more we let go, the more loving we become.",
+            "Peace is the natural state of the Self.",
+            "Everything you see happening is the consequence of that which you are.",
+            "Surrender is a constant process of not resisting or clinging to the moment.",
+            "Love is misunderstood to be an emotion; actually, it is a state of awareness.",
+            "The letting go technique is a system of eliminating the ego.",
+            "When you give up the resistance to the feeling, the energy behind it runs out.",
+            "You are the context in which the content of your life is unfolding."
+        ];
+
+        const QA_DATA = [
+            { category: "Beginner / Skeptic", q: "Is this just suppressing feelings?", a: "No. Suppression is pushing a feeling down to avoid it. Letting go is the opposite: it is allowing the feeling to come up, acknowledging it, and letting the energy escape. You are opening the release valve rather than tightening it." },
+            { category: "Beginner / Skeptic", q: "Why should I ignore my thoughts?", a: "Thoughts are rationalizations created by the mind to explain the presence of a feeling. They are often repetitive and self-reinforcing. By focusing on the physical sensation of the emotion instead of the 'story', you cut the fuel supply to the thoughts, and they eventually vanish." },
+            { category: "Beginner / Skeptic", q: "What if the feeling is too strong?", a: "If a feeling is overwhelming, surrender to the fear of the feeling first. Acknowledge that you are afraid of it. Let go of the resistance to the fear. Once the fear subsides, you can handle the underlying emotion." },
+            { category: "Novice", q: "I feel stuck. Nothing is happening.", a: "You may be 'wanting' it to change. Wanting to get rid of a feeling is a form of resistance. Can you let go of the desire to change it? Can you just allow it to be there for now?" },
+            { category: "Novice", q: "Can I do this in public?", a: "Yes. Letting go is an internal mechanism. You can be in a meeting or walking down the street. Simply notice the tension in your solar plexus or chest, drop the resistance, and let it pass through you." },
+            { category: "Novice", q: "How do I know if I've let go?", a: "You will feel a sensation of lightness, relief, or sudden clarity. The thoughts associated with the feeling will stop coming back, or if they do, they will lack emotional charge." },
+            { category: "Adept", q: "The 'Void' or emptiness", a: "As you release major blocks, you may encounter a sense of emptiness. This is not a bad thing; it is the space where the ego used to be. Do not resist the emptiness. Rest in it. It is the precursor to peace." },
+            { category: "Adept", q: "Letting go of 'positive' things", a: "We also hold onto attachments to positive outcomes, desire, and excitement. Surrendering these attachments does not mean you become apathetic; it means you become peaceful and happy regardless of whether you get the object of desire or not." },
+            { category: "Pro", q: "Who is the one letting go?", a: "Eventually, you realize that the 'I' that is trying to let go is also just a thought. You can surrender the sense of a separate 'doer'. This leads to the realization that everything is happening spontaneously." },
+            { category: "Pro", q: "Surrender vs. Apathy", a: "Apathy is 'I can't do anything'. Surrender is 'I don't need to control anything'. Apathy feels heavy and dark. Surrender feels light and expansive. If you feel drained, it is apathy. If you feel lighter, it is surrender." }
+        ];
+
+        // --- STATE ---
+        let activeTab = 'guide';
+        let timerInterval = null;
+        let timerDuration = 600; 
+        let defaultDuration = 600;
+        let timerEndTime = 0;
+        let isTimerRunning = false;
+        let currentTimerSessionLength = 600; 
+        let bellInterval = 0; 
+        let currentAmbience = 'none';
+        let audioContext = null;
+        let mainGain = null;
+        
+        // Audio Nodes
+        let noiseNode = null; 
+        let modOsc = null; 
+        let modGain = null;
+        let birdInterval = null;
+        let chimeInterval = null;
+
+        let processInterval = null;
+        let processSeconds = 0;
+        let processStartTime = 0;
+        let currentProcessEmotion = "";
+
+        window.onload = function() {
+            initIntro();
+            lucide.createIcons();
+            initQA();
+            updateTimerDisplay();
+            loadJournal();
+        };
+
+        // --- INTRO ---
+        function initIntro() {
+            const quoteEl = document.getElementById('intro-quote');
+            if(quoteEl) {
+                const randomQuote = INTRO_QUOTES[Math.floor(Math.random() * INTRO_QUOTES.length)];
+                quoteEl.textContent = randomQuote;
+            }
+        }
+        function dismissIntro() {
+            const screen = document.getElementById('intro-screen');
+            screen.style.opacity = '0';
+            setTimeout(() => { screen.style.display = 'none'; }, 1000);
+            if(!audioContext) initAudio();
+        }
+
+        // --- GENERATIVE AUDIO ENGINE (Pure Synth) ---
+        function initAudio() {
+            if(!audioContext) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioContext = new AudioContext();
+                mainGain = audioContext.createGain();
+                mainGain.connect(audioContext.destination);
+            }
+            if(audioContext.state === 'suspended') audioContext.resume();
+        }
+
+        // Buffer Generators
+        function createPinkNoise() {
+            const bs = audioContext.sampleRate * 2;
+            const buffer = audioContext.createBuffer(1, bs, audioContext.sampleRate);
+            const data = buffer.getChannelData(0);
+            let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+            for(let i=0; i<bs; i++) {
+                let white = Math.random()*2-1;
+                b0 = 0.99886 * b0 + white * 0.0555179;
+                b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.96900 * b2 + white * 0.1538520;
+                b3 = 0.86650 * b3 + white * 0.3104856;
+                b4 = 0.55000 * b4 + white * 0.5329522;
+                b5 = -0.7616 * b5 - white * 0.0168980;
+                data[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+                data[i] *= 0.11; 
+                b6 = white * 0.115926;
+            }
+            return buffer;
+        }
+
+        function createBrownNoise() {
+            const bs = audioContext.sampleRate * 2;
+            const buffer = audioContext.createBuffer(1, bs, audioContext.sampleRate);
+            const data = buffer.getChannelData(0);
+            let lastOut = 0;
+            for(let i=0; i<bs; i++) {
+                let white = Math.random()*2-1;
+                data[i] = (lastOut + (0.02 * white)) / 1.02;
+                lastOut = data[i];
+                data[i] *= 3.5; 
+            }
+            return buffer;
+        }
+
+        // Instruments
+        function playSingleChime() {
+            if(!audioContext) return;
+            const osc = audioContext.createOscillator();
+            const osc2 = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            const modGain = audioContext.createGain();
+            
+            // Pentatonic Frequencies
+            const freqs = [523.25, 587.33, 659.25, 783.99, 880.00]; // C5, D5, E5, G5, A5
+            const freq = freqs[Math.floor(Math.random() * freqs.length)];
+            
+            osc.frequency.value = freq;
+            osc2.frequency.value = freq * 2.5; // Modulation ratio
+            
+            modGain.gain.value = 500;
+            
+            osc2.connect(modGain);
+            modGain.connect(osc.frequency);
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            
+            const now = audioContext.currentTime;
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.1, now + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 4);
+            
+            osc.start(now);
+            osc2.start(now);
+            osc.stop(now + 4.5);
+            osc2.stop(now + 4.5);
+        }
+
+        function playSingleBird() {
+            if(!audioContext) return;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            
+            const now = audioContext.currentTime;
+            // Chirp logic
+            const freq = 2000 + Math.random() * 1500;
+            osc.frequency.setValueAtTime(freq, now);
+            osc.frequency.linearRampToValueAtTime(freq + 500, now + 0.1);
+            osc.frequency.linearRampToValueAtTime(freq - 200, now + 0.2);
+            
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.05, now + 0.02);
+            gain.gain.linearRampToValueAtTime(0, now + 0.25);
+            
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+
+        function playBell() {
+            if(!audioContext) return;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.frequency.setValueAtTime(440, audioContext.currentTime);
+            gain.gain.setValueAtTime(0, audioContext.currentTime);
+            gain.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 6);
+            osc.start(audioContext.currentTime);
+            osc.stop(audioContext.currentTime + 6);
+        }
+
+        // Manager
+        function stopAmbience() {
+            if(noiseNode) { try{noiseNode.stop()}catch(e){}; noiseNode.disconnect(); noiseNode=null; }
+            if(modOsc) { try{modOsc.stop()}catch(e){}; modOsc.disconnect(); modOsc=null; }
+            if(birdInterval) { clearInterval(birdInterval); birdInterval = null; }
+            if(chimeInterval) { clearInterval(chimeInterval); chimeInterval = null; }
+        }
+
+        function playAmbience(type) {
+            stopAmbience();
+            initAudio();
+            
+            if(type === 'rain') {
+                // Rain: Pink noise + droplets
+                const gain = audioContext.createGain();
+                noiseNode = audioContext.createBufferSource();
+                noiseNode.buffer = createPinkNoise();
+                noiseNode.loop = true;
+                gain.gain.value = 0.15;
+                noiseNode.connect(gain);
+                gain.connect(audioContext.destination);
+                noiseNode.start();
+            }
+            else if(type === 'river') {
+                // River: Brown noise + filter
+                const gain = audioContext.createGain();
+                noiseNode = audioContext.createBufferSource();
+                noiseNode.buffer = createBrownNoise();
+                noiseNode.loop = true;
+                const filter = audioContext.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 600;
+                gain.gain.value = 0.3;
+                noiseNode.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioContext.destination);
+                noiseNode.start();
+            }
+            else if(type === 'wind') {
+                // Wind: Pink + LFO filter
+                const gain = audioContext.createGain();
+                noiseNode = audioContext.createBufferSource();
+                noiseNode.buffer = createPinkNoise();
+                noiseNode.loop = true;
+                const filter = audioContext.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.Q.value = 1;
+                modOsc = audioContext.createOscillator();
+                modOsc.frequency.value = 0.15;
+                const modGainNode = audioContext.createGain();
+                modGainNode.gain.value = 400;
+                modOsc.connect(modGainNode);
+                modGainNode.connect(filter.frequency);
+                filter.frequency.value = 500;
+                noiseNode.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioContext.destination);
+                gain.gain.value = 0.3;
+                noiseNode.start();
+                modOsc.start();
+            }
+            else if(type === 'birds') {
+                // Ambient background + Random chirps
+                const gain = audioContext.createGain();
+                noiseNode = audioContext.createBufferSource();
+                noiseNode.buffer = createPinkNoise();
+                noiseNode.loop = true;
+                const filter = audioContext.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 2000; // Light airy bg
+                gain.gain.value = 0.02;
+                noiseNode.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioContext.destination);
+                noiseNode.start();
+                
+                birdInterval = setInterval(() => {
+                    if(Math.random() > 0.6) playSingleBird();
+                }, 1500);
+            }
+            else if(type === 'chimes') {
+                chimeInterval = setInterval(() => {
+                    if(Math.random() > 0.5) playSingleChime();
+                }, 2500);
+                playSingleChime(); // Play one immediately
+            }
+        }
+
+        // --- TIMER LOGIC ---
+        function toggleTimer() {
+            const btn = document.getElementById('timer-toggle');
+            const breathCircle = document.getElementById('breath-circle');
+
+            if (isTimerRunning) {
+                const now = Date.now();
+                const remaining = Math.ceil((timerEndTime - now) / 1000);
+                timerDuration = remaining > 0 ? remaining : 0;
+                
+                isTimerRunning = false;
+                clearInterval(timerInterval);
+                stopAmbience();
+                
+                btn.innerHTML = '<i data-lucide="play" class="w-8 h-8 fill-current ml-1"></i>';
+                breathCircle.classList.remove('animate-breathe');
+                breathCircle.style.transform = 'scale(1)';
+                updateTimerDisplay();
+            } else {
+                if (timerDuration <= 0) timerDuration = defaultDuration;
+                currentTimerSessionLength = timerDuration; 
+                
+                isTimerRunning = true;
+                timerEndTime = Date.now() + (timerDuration * 1000);
+                
+                initAudio(); 
+                if(currentAmbience !== 'none') playAmbience(currentAmbience);
+                
+                btn.innerHTML = '<i data-lucide="pause" class="w-8 h-8 fill-current"></i>';
+                breathCircle.classList.add('animate-breathe');
+                updateTimerDisplay();
+                
+                timerInterval = setInterval(() => {
+                    const now = Date.now();
+                    const remaining = Math.ceil((timerEndTime - now) / 1000);
+                    
+                    if (bellInterval !== 0 && remaining > 0) {
+                        const elapsed = currentTimerSessionLength - remaining;
+                        if (bellInterval === 'half') {
+                            if (elapsed === Math.floor(currentTimerSessionLength / 2)) playBell();
+                        } else {
+                            if (elapsed > 0 && elapsed % (bellInterval * 60) === 0) playBell();
+                        }
+                    }
+
+                    if (remaining <= 0) {
+                        timerDuration = 0;
+                        isTimerRunning = false;
+                        clearInterval(timerInterval);
+                        stopAmbience();
+                        playBell(); 
+                        
+                        btn.innerHTML = '<i data-lucide="play" class="w-8 h-8 fill-current ml-1"></i>';
+                        breathCircle.classList.remove('animate-breathe');
+                        breathCircle.style.transform = 'scale(1)';
+                        document.getElementById('timer-display').textContent = "00:00";
+                        
+                        document.getElementById('complete-modal').classList.remove('hidden');
+                        document.getElementById('complete-modal').classList.add('flex');
+                    } else {
+                        updateTimerDisplay();
+                    }
+                }, 1000); 
+            }
+            lucide.createIcons();
+        }
+
+        function formatTime(sec) {
+            if (sec < 0) sec = 0;
+            const m = Math.floor(sec / 60).toString().padStart(2, '0');
+            const s = (sec % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function updateTimerDisplay() {
+            let sec = timerDuration;
+            if(isTimerRunning) {
+                const now = Date.now();
+                const remaining = Math.ceil((timerEndTime - now) / 1000);
+                sec = remaining > 0 ? remaining : 0;
+            }
+            document.getElementById('timer-display').textContent = formatTime(sec);
+        }
+
+        function adjustTimer(amount) {
+            if (isTimerRunning) return;
+            if (timerDuration + amount > 0) {
+                timerDuration += amount;
+                defaultDuration = timerDuration;
+                updateTimerDisplay();
+            }
+        }
+
+        function resetTimer() {
+            if (isTimerRunning) toggleTimer();
+            timerDuration = defaultDuration;
+            stopAmbience();
+            updateTimerDisplay();
+        }
+
+        // --- SETTINGS MODALS ---
+        function toggleModal(id) {
+            const el = document.getElementById(id);
+            if(el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                el.classList.add('flex');
+            } else {
+                el.classList.add('hidden');
+                el.classList.remove('flex');
+            }
+        }
+
+        function setBellInterval(val) {
+            bellInterval = val;
+            ['0','1','5','half'].forEach(v => document.getElementById(`bell-check-${v}`).classList.add('hidden'));
+            document.getElementById(`bell-check-${val}`).classList.remove('hidden');
+            if(val !== 0) document.getElementById('bell-status').classList.remove('hidden');
+            else document.getElementById('bell-status').classList.add('hidden');
+            toggleModal('bell-modal');
+        }
+
+        function setAmbience(val) {
+            currentAmbience = val;
+            ['none','rain','wind','river','birds','chimes'].forEach(v => document.getElementById(`amb-check-${v}`).classList.add('hidden'));
+            document.getElementById(`amb-check-${val}`).classList.remove('hidden');
+            if(val !== 'none') document.getElementById('ambience-status').classList.remove('hidden');
+            else document.getElementById('ambience-status').classList.add('hidden');
+            if(isTimerRunning) playAmbience(val);
+            toggleModal('ambience-modal');
+        }
+
+        function saveTimerSession() {
+            const intentionInput = document.getElementById('timer-intention');
+            const intention = intentionInput && intentionInput.value.trim() ? intentionInput.value.trim() : "Meditation";
+            
+            const releases = JSON.parse(localStorage.getItem('releases') || '[]');
+            releases.unshift({
+                emotion: intention,
+                date: new Date().toLocaleDateString(undefined, {month:'short', day:'numeric'}),
+                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                duration: currentTimerSessionLength
+            });
+            localStorage.setItem('releases', JSON.stringify(releases));
+            if(intentionInput) intentionInput.value = "";
+            closeCompleteModal();
+            resetTimer();
+            switchTab('journal');
+        }
+
+        function closeCompleteModal() {
+            document.getElementById('complete-modal').classList.add('hidden');
+            document.getElementById('complete-modal').classList.remove('flex');
+            resetTimer();
+        }
+
+        // --- Q&A ---
+        function initQA() {
+            const container = document.getElementById('qa-container');
+            if (!container) return;
+            let html = "";
+            let currentCat = "";
+            QA_DATA.forEach((item, index) => {
+                if (item.category !== currentCat) {
+                    currentCat = item.category;
+                    html += `<h3 class="text-gold-500 text-xs uppercase tracking-widest mt-6 mb-2 font-medium pl-1">${currentCat}</h3>`;
+                }
+                html += `
+                    <div class="glass-panel rounded-xl overflow-hidden mb-3">
+                        <button onclick="toggleFAQ(${index})" class="w-full px-5 py-4 text-left flex justify-between items-center hover:bg-slate-800/50 transition focus:outline-none select-none">
+                            <span class="text-slate-200 font-medium pr-4 text-sm">${item.q}</span>
+                            <i data-lucide="chevron-down" id="faq-icon-${index}" class="faq-icon w-4 h-4 text-slate-500 shrink-0"></i>
+                        </button>
+                        <div id="faq-ans-${index}" class="faq-answer bg-slate-900/30 border-t border-slate-800/50">
+                            <p class="p-5 text-slate-400 text-sm leading-relaxed font-light">${item.a}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+        function toggleFAQ(index) {
+            const ans = document.getElementById(`faq-ans-${index}`);
+            const icon = document.getElementById(`faq-icon-${index}`);
+            if (ans.classList.contains('active')) {
+                ans.classList.remove('active');
+                icon.classList.remove('active');
+            } else {
+                ans.classList.add('active');
+                icon.classList.add('active');
+            }
+        }
+
+        function switchTab(tabId) {
+            activeTab = tabId;
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`view-${tabId}`);
+            if(target) {
+                target.classList.remove('hidden');
+                target.classList.remove('animate-fade-in');
+                void target.offsetWidth;
+                target.classList.add('animate-fade-in');
+            }
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-gold-500', 'text-white');
+                btn.classList.add('text-slate-500');
+            });
+            const activeBtn = document.querySelector(`button[onclick="switchTab('${tabId}')"]`);
+            if(activeBtn) {
+                activeBtn.classList.remove('text-slate-500');
+                activeBtn.classList.add('text-gold-500');
+            }
+            if (tabId === 'qa') {
+                const container = document.getElementById('qa-container');
+                if (!container || container.innerHTML.includes("Loading")) initQA();
+            }
+            if (tabId === 'journal') loadJournal();
+        }
+
+        function toggleSettings() {
+            const modal = document.getElementById('info-modal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        // --- PROCESS ---
+        function startProcess() {
+            const input = document.getElementById('emotion-input');
+            if (!input.value.trim()) return;
+            currentProcessEmotion = input.value.trim();
+            document.querySelectorAll('.current-emotion').forEach(el => el.textContent = currentProcessEmotion);
+            processSeconds = 0;
+            nextStep(1);
+            document.getElementById('process-reset-btn').classList.remove('hidden');
+        }
+        function nextStep(step) {
+            document.querySelectorAll('.process-step').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`process-step-${step}`);
+            target.classList.remove('hidden');
+            target.classList.add('animate-fade-in');
+            if (step === 4) startProcessTimer(); else stopProcessTimer();
+            if (step === 5) document.getElementById('process-reset-btn').classList.add('hidden');
+        }
+        function startProcessTimer() {
+            const display = document.getElementById('process-timer');
+            processSeconds = 0;
+            display.textContent = "00:00";
+            if (processInterval) clearInterval(processInterval);
+            processStartTime = Date.now();
+            processInterval = setInterval(() => {
+                const now = Date.now();
+                processSeconds = Math.floor((now - processStartTime) / 1000);
+                const m = Math.floor(processSeconds / 60).toString().padStart(2, '0');
+                const s = (processSeconds % 60).toString().padStart(2, '0');
+                display.textContent = `${m}:${s}`;
+            }, 1000);
+        }
+        function stopProcessTimer() { if (processInterval) clearInterval(processInterval); }
+        function finishProcess() { stopProcessTimer(); nextStep(5); }
+        function resetProcess() {
+            stopProcessTimer();
+            document.getElementById('emotion-input').value = '';
+            document.querySelectorAll('.process-step').forEach(el => el.classList.add('hidden'));
+            document.getElementById('process-step-0').classList.remove('hidden');
+            document.getElementById('process-reset-btn').classList.add('hidden');
+        }
+        function saveAndClose() {
+            const releases = JSON.parse(localStorage.getItem('releases') || '[]');
+            releases.unshift({
+                emotion: currentProcessEmotion,
+                date: new Date().toLocaleDateString(undefined, {month:'short', day:'numeric'}),
+                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                duration: processSeconds
+            });
+            localStorage.setItem('releases', JSON.stringify(releases));
+            resetProcess();
+            switchTab('journal');
+        }
+
+        // --- JOURNAL WITH SWIPE TO DELETE ---
+        function loadJournal() {
+            const list = document.getElementById('journal-list');
+            if (!list) return;
+            const releases = JSON.parse(localStorage.getItem('releases') || '[]');
+            if (releases.length === 0) {
+                list.innerHTML = `<div class="text-center py-16 animate-fade-in"><div class="text-slate-800 mb-4"><i data-lucide="book-open" class="w-16 h-16 mx-auto"></i></div><p class="text-slate-600 text-sm">No releases recorded yet.</p></div>`;
+            } else {
+                list.innerHTML = releases.map((entry, index) => `
+                    <div class="relative overflow-hidden rounded-xl mb-3 animate-fade-in" style="animation-delay: ${index * 50}ms">
+                        <div class="delete-action bg-red-600 text-white" onclick="deleteEntry(${index})">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </div>
+                        <div class="glass-panel p-5 flex justify-between items-center swipe-item" 
+                             ontouchstart="handleTouchStart(event, this)" 
+                             ontouchmove="handleTouchMove(event, this)" 
+                             ontouchend="handleTouchEnd(event, this)">
+                            <div class="flex-1 pr-4" onclick="renameEntry(${index})">
+                                <h3 class="text-white font-medium capitalize text-lg truncate">${entry.emotion} <i data-lucide="edit-2" class="inline-block w-3 h-3 text-slate-600 ml-1"></i></h3>
+                                <p class="text-xs text-slate-500 mt-1">${entry.date} • ${entry.time}</p>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <span class="text-xs font-mono text-gold-500">${entry.duration > 60 ? Math.floor(entry.duration/60) + 'm' : entry.duration + 's'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            lucide.createIcons();
+        }
+
+        let xDown = null;
+        let activeSwipeItem = null;
+
+        function handleTouchStart(evt, el) {
+            xDown = evt.touches[0].clientX;
+            activeSwipeItem = el;
+        }
+
+        function handleTouchMove(evt, el) {
+            if (!xDown || !activeSwipeItem) return;
+            let xUp = evt.touches[0].clientX;
+            let xDiff = xDown - xUp;
+            // Only swipe left
+            if (xDiff > 0) {
+                // Limit swipe
+                if(xDiff > 80) xDiff = 80;
+                el.style.transform = `translateX(-${xDiff}px)`;
+            }
+        }
+
+        function handleTouchEnd(evt, el) {
+            if (!xDown || !activeSwipeItem) return;
+            let xUp = evt.changedTouches[0].clientX;
+            let xDiff = xDown - xUp;
+            if (xDiff > 40) { // Threshold
+                el.style.transform = `translateX(-80px)`;
+            } else {
+                el.style.transform = `translateX(0px)`;
+            }
+            xDown = null;
+            activeSwipeItem = null;
+        }
+
+        function deleteEntry(index) {
+            if(confirm("Delete this entry?")) {
+                const releases = JSON.parse(localStorage.getItem('releases') || '[]');
+                releases.splice(index, 1);
+                localStorage.setItem('releases', JSON.stringify(releases));
+                loadJournal();
+            } else {
+                // Reset swipe if cancelled
+                loadJournal(); 
+            }
+        }
+
+        function renameEntry(index) {
+            const releases = JSON.parse(localStorage.getItem('releases') || '[]');
+            const newName = prompt("Rename entry:", releases[index].emotion);
+            if(newName && newName.trim() !== "") {
+                releases[index].emotion = newName.trim();
+                localStorage.setItem('releases', JSON.stringify(releases));
+                loadJournal();
+            }
+        }
+
+        function clearJournal() {
+            if (confirm("Clear all journal entries? This cannot be undone.")) { 
+                localStorage.removeItem('releases'); 
+                loadJournal(); 
+            }
+        }
+    </script>
+</body>
+</html>
